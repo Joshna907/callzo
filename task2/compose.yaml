@@ -1,0 +1,23 @@
+services:
+  mock-api:
+    image: meetrj/callzo-mock-usage-api
+    platform: linux/arm64
+    ports:
+      - "127.0.0.1:8001:8001"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health', timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 12
+  frontend:
+    image: joshna907/callzo-task2-frontend:v1
+    ports:
+      - "127.0.0.1:3000:80"
+    depends_on:
+      mock-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 3s
+      retries: 5

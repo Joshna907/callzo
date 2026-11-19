@@ -1,0 +1,45 @@
+services:
+  api:
+    build: .
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    environment:
+      PORT: 8000
+      DATABASE_URL: postgres://callzo:local_dev_only@postgres:5432/callzo
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:?Set WEBHOOK_SECRET in task1/.env; see .env.example}
+      API_KEY: ${API_KEY:?Run npm run setup to generate a local API key}
+      MONTHLY_CAP_CENTS: ${MONTHLY_CAP_CENTS:-500}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8000/ready').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  simulator:
+    image: meetrj/callzo-webhook-simulator
+    # The supplied image currently publishes ARM64 only; Desktop can emulate it.
+    platform: ${SIMULATOR_PLATFORM:-linux/arm64}
+    depends_on:
+      api:
+        condition: service_healthy
+    command: ["--url", "http://api:8000/webhooks/calls", "--scenario", "${SIMULATOR_SCENARIO:-all}"]
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: callzo
+      POSTGRES_PASSWORD: local_dev_only
+      POSTGRES_DB: callzo
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U callzo -d callzo"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_data:

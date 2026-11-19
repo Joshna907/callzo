@@ -1,0 +1,23 @@
+# Isolated, disposable database for integration tests; no persistent volumes.
+services:
+  test-postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: callzo_test
+      POSTGRES_PASSWORD: test_only
+      POSTGRES_DB: callzo_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U callzo_test -d callzo_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  test:
+    build:
+      context: .
+      target: build
+    command: ["npm", "run", "test:integration"]
+    environment:
+      TEST_DATABASE_URL: postgres://callzo_test:test_only@test-postgres:5432/callzo_test
+    depends_on:
+      test-postgres:
+        condition: service_healthy
