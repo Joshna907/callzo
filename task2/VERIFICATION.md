@@ -2,6 +2,8 @@
 
 Release image pushed successfully: `joshna907/callzo-task2-frontend:v1`, multi-platform digest `sha256:2e0fbfbb8f9a96402f8cdf89378580f94e60f546f2ccba2437ab57fbfbf14a6c`.
 
+Anonymous registry manifest request returned HTTP 200 with this digest. Main Compose pulled the published frontend, started both services healthy, and returned HTTP 200 for the page and API health proxy (10,500 accounts).
+
 Final automated checks: 19 November 2026. Dashboard browser checks: 13 November; settings browser checks: 18 November.
 
 - 20 tests passed; TypeScript and production build passed.
